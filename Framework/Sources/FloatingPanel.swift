@@ -44,6 +44,7 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
     private var initialTranslationY: CGFloat = 0
 
     var interactionInProgress: Bool = false
+    var isDecelerating: Bool = false
 
     // Scroll handling
     private var stopScrollDeceleration: Bool = false
@@ -503,6 +504,7 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
 
     private func startAnimation(to targetPosition: FloatingPanelPosition, at distance: CGFloat, with velocity: CGPoint) {
         log.debug("startAnimation", targetPosition, distance, velocity)
+        isDecelerating = true
         
         let velocityVector = (distance != 0) ? CGVector(dx: 0, dy: max(min(velocity.y/distance, 30.0), -30.0)) : .zero
         let animator = behavior.interactionAnimator(self.viewcontroller, to: targetPosition, with: velocityVector)
@@ -513,6 +515,7 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
         }
         animator.addCompletion { [weak self] pos in
             guard let `self` = self else { return }
+            self.isDecelerating = false
             guard
                 self.interactionInProgress == false,
                 animator == self.animator,
