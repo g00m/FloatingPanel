@@ -730,7 +730,7 @@ class TabBarContentViewController: UIViewController, FloatingPanelControllerDele
     var fpc: FloatingPanelController!
     var consoleVC: DebugTextViewController!
 
-    var threeLayout: ThreeTabBarPanelLayout = ThreeTabBarPanelLayout()
+    var threeLayout: ThreeTabBarPanelLayout!
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -752,6 +752,11 @@ class TabBarContentViewController: UIViewController, FloatingPanelControllerDele
         fpc.addPanel(toParent: self)
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        fpc.updateLayout()
+    }
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         //  Remove FloatingPanel from a view
@@ -765,6 +770,7 @@ class TabBarContentViewController: UIViewController, FloatingPanelControllerDele
         case 1:
             return TwoTabBarPanelLayout()
         case 2:
+            threeLayout = ThreeTabBarPanelLayout(parent: self)
             return threeLayout
         default:
             return nil
@@ -905,8 +911,14 @@ class TwoTabBarPanelLayout: FloatingPanelLayout {
 }
 
 class ThreeTabBarPanelLayout: FloatingPanelFullScreenLayout {
+    weak var parentVC: UIViewController!
+
     var leftConstraint: NSLayoutConstraint!
     var rightConstraint: NSLayoutConstraint!
+
+    init(parent: UIViewController) {
+        parentVC = parent
+    }
 
     var initialPosition: FloatingPanelPosition {
         return .half
@@ -917,8 +929,8 @@ class ThreeTabBarPanelLayout: FloatingPanelFullScreenLayout {
     func insetFor(position: FloatingPanelPosition) -> CGFloat? {
         switch position {
         case .full: return 0.0
-        case .half: return 261.0
-        case .tip: return 88.0
+        case .half: return 261.0 + parentVC.layoutInsets.bottom
+        case .tip: return 88.0 + parentVC.layoutInsets.bottom
         default: return nil
         }
     }
