@@ -314,8 +314,6 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
                 }
                 panningChange(with: translation)
             case .ended, .cancelled, .failed:
-                // Uppdate the surface frame with the last translation
-                panningChange(with: translation)
                 panningEnd(with: translation, velocity: velocity)
             case .possible:
                 break
@@ -380,11 +378,25 @@ class FloatingPanel: NSObject, UIGestureRecognizerDelegate, UIScrollViewDelegate
         log.debug("panningChange")
 
         let dy = translation.y - initialTranslationY
-        layoutAdapter.updateInteractiveTopConstraint(diff: dy)
+
+        layoutAdapter.updateInteractiveTopConstraint(diff: dy,
+                                                     allowsOverflow: allowsOverflow(for: dy))
+
         backdropView.alpha = getBackdropAlpha(with: translation)
         preserveContentVCLayoutIfNeeded()
 
         viewcontroller.delegate?.floatingPanelDidMove(viewcontroller)
+    }
+
+    private func allowsOverflow(for translationY: CGFloat) -> Bool {
+        let preY = surfaceView.frame.minY
+        let nextY = initialFrame.offsetBy(dx: 0.0, dy: translationY).minY
+        if let scrollView = scrollView, scrollView.panGestureRecognizer.state == .changed,
+            preY > 0 && preY > nextY {
+            return false
+        } else {
+            return true
+        }
     }
 
     private var disabledBottomAutoLayout = false

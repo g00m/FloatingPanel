@@ -399,25 +399,33 @@ class FloatingPanelLayoutAdapter {
         }
     }
 
-    func updateInteractiveTopConstraint(diff: CGFloat) {
+    func updateInteractiveTopConstraint(diff: CGFloat, allowsOverflow: Bool) {
         defer {
             surfaceView.superview!.layoutIfNeeded()
         }
         let minY: CGFloat = {
+            var ret: CGFloat = 0.0
             switch layout {
             case is FloatingPanelIntrinsicLayout:
-                return topY - layout.topInteractionBuffer
+                ret = topY
             default:
-                return fullInset - layout.topInteractionBuffer
+                ret = fullInset
             }
+            if allowsOverflow {
+                ret -= layout.topInteractionBuffer
+            }
+            return max(ret, topMaxY)
         }()
         let maxY: CGFloat = {
+            var ret: CGFloat = 0.0
             switch layout {
             case is FloatingPanelIntrinsicLayout, is FloatingPanelFullScreenLayout:
-                return bottomY + layout.bottomInteractionBuffer
+                ret = bottomY
             default:
-                return bottomY - safeAreaInsets.top + layout.bottomInteractionBuffer
+                ret = bottomY - safeAreaInsets.top
             }
+            ret += layout.bottomInteractionBuffer
+            return min(ret, bottomMaxY)
         }()
         let const = initialConst + diff
 
